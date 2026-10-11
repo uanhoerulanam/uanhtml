@@ -170,6 +170,23 @@
     throw new Error('Server tidak mengirim hasil yang dikenali.');
   }
 
+  async function fetchTikTokFallback(tiktokUrl) {
+    try {
+      const res = await fetch(`https://www.tikwm.com/api/?url=${encodeURIComponent(tiktokUrl)}`);
+      const data = await res.json();
+      if (data && data.code === 0 && data.data) {
+        return {
+          cover: data.data.cover || data.data.origin_cover || null,
+          title: data.data.title || null,
+          views: data.data.play_count ?? null,
+          likes: data.data.digg_count ?? null,
+          comments: data.data.comment_count ?? null
+        };
+      }
+    } catch {}
+    return null;
+  }
+
   async function getPresetLinks(tiktokUrl) {
     const fetchUrl = `${API_ENDPOINT}?url=${encodeURIComponent(tiktokUrl)}`;
     const controller = new AbortController();
@@ -200,19 +217,28 @@
       const result = await parseSSEStream(response);
       if (result.ok === false) throw new Error(result.message || result.error || 'Server tidak dapat memproses tautan ini.');
 
-      // Cari cover fallback jika video cover null
+      // Metadata fallback jika embed amfinder tidak sertakan cover/stats
+      let fallbackMeta = null;
+      if (!result.video?.cover || result.video?.stats?.views == null) {
+        fallbackMeta = await fetchTikTokFallback(tiktokUrl);
+      }
+
       const firstPresetThumb = (result.presetLinks || []).find(p => p.thumb)?.thumb;
-      const coverUrl = result.video?.cover || firstPresetThumb || result.authorDetail?.avatar || null;
+      const coverUrl = result.video?.cover || fallbackMeta?.cover || firstPresetThumb || result.authorDetail?.avatar || null;
+      const description = result.video?.description?.trim() || fallbackMeta?.title || result.authorDetail?.nickname || '';
+      const views = result.video?.stats?.views ?? fallbackMeta?.views ?? null;
+      const likes = result.video?.stats?.likes ?? fallbackMeta?.likes ?? null;
+      const comments = result.video?.stats?.comments ?? fallbackMeta?.comments ?? null;
 
       return {
         author: result.author || result.authorDetail?.uniqueId || null,
         video: {
-          description: result.video?.description?.trim() || result.authorDetail?.nickname || '',
+          description,
           cover: coverUrl,
           stats: {
-            views: result.video?.stats?.views ?? null,
-            likes: result.video?.stats?.likes ?? null,
-            comments: result.video?.stats?.comments ?? null
+            views,
+            likes,
+            comments
           }
         },
         presetLinks: (result.presetLinks || []).map(p => ({
@@ -252,14 +278,27 @@
     return badge;
   }
 
+  function makeSymbol(type) {
+    const symbol = document.createElement('div');
+    symbol.className = 'preset-symbol';
+    symbol.textContent = type === '5mb' ? '✦' : '⌘';
+    symbol.setAttribute('aria-hidden', 'true');
+    return symbol;
+  }
+
   function renderVideo(result) {
     const cover = document.getElementById('videoCover');
     const placeholder = document.getElementById('coverPlaceholder');
     if (result.video.cover && isSafeHttpUrl(result.video.cover)) {
+      cover.referrerPolicy = 'no-referrer';
       cover.src = result.video.cover;
       cover.hidden = false;
       placeholder.hidden = true;
-      cover.onerror = () => { cover.hidden = true; placeholder.hidden = false; };
+      cover.onerror = () => {
+        cover.removeAttribute('src');
+        cover.hidden = true;
+        placeholder.hidden = false;
+      };
     } else {
       cover.removeAttribute('src');
       cover.hidden = true;
@@ -294,10 +333,20 @@
       const item = document.createElement('article');
       item.className = 'preset-item';
 
-      const symbol = document.createElement('div');
-      symbol.className = 'preset-symbol';
-      symbol.textContent = preset.type === '5mb' ? '✦' : '⌘';
-      symbol.setAttribute('aria-hidden', 'true');
+      let visualEl;
+      if (preset.thumb && isSafeHttpUrl(preset.thumb)) {
+        const img = document.createElement('img');
+        img.className = 'preset-thumb';
+        img.src = preset.thumb;
+        img.alt = preset.title;
+        img.referrerPolicy = 'no-referrer';
+        img.onerror = () => {
+          img.replaceWith(makeSymbol(preset.type));
+        };
+        visualEl = img;
+      } else {
+        visualEl = makeSymbol(preset.type);
+      }
 
       const main = document.createElement('div');
       main.className = 'preset-main';
@@ -320,7 +369,7 @@
       download.textContent = 'Unduh ↗';
       download.setAttribute('aria-label', `Buka tautan unduhan ${preset.title}`);
 
-      item.append(symbol, main, download);
+      item.append(visualEl, main, download);
       presetList.appendChild(item);
     });
   }

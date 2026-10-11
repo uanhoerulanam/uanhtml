@@ -82,6 +82,7 @@ input::placeholder { color: #716b83; }
 .preset-list { display: grid; gap: 11px; }
 .preset-item { display: flex; align-items: center; gap: 13px; padding: 16px; border: 1px solid var(--line); border-radius: 16px; background: var(--panel-soft); }
 .preset-symbol { display: grid; place-items: center; flex: 0 0 43px; height: 43px; border-radius: 12px; color: #ddd0ff; background: #8b5cf629; font-size: 20px; }
+.preset-thumb { width: 43px; height: 43px; flex: 0 0 43px; object-fit: cover; border-radius: 12px; background: #29223e; border: 1px solid var(--line); }
 .preset-main { min-width: 0; flex: 1; }
 .preset-title { margin: 0 0 7px; color: #f5f2ff; font-size: 13px; font-weight: 700; overflow-wrap: anywhere; word-break: break-word; }
 .badges { display: flex; flex-wrap: wrap; gap: 5px; }

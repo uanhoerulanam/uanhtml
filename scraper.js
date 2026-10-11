@@ -131,20 +131,40 @@ async function get_preset_links(link_tiktok) {
 
     const firstPresetThumb = (result.presetLinks || []).find(p => p.thumb)?.thumb;
 
+    let cover = result.video?.cover || firstPresetThumb || null;
+    let description = result.video?.description?.trim() || result.authorDetail?.nickname || '';
+    let views = result.video?.stats?.views ?? null;
+    let likes = result.video?.stats?.likes ?? null;
+    let comments = result.video?.stats?.comments ?? null;
+
+    if (!cover || views == null) {
+      try {
+        const fb = await fetch(`https://www.tikwm.com/api/?url=${encodeURIComponent(url)}`);
+        const fbData = await fb.json();
+        if (fbData?.code === 0 && fbData.data) {
+          cover = cover || fbData.data.cover || fbData.data.origin_cover || null;
+          description = description || fbData.data.title || '';
+          views = views ?? fbData.data.play_count ?? null;
+          likes = likes ?? fbData.data.digg_count ?? null;
+          comments = comments ?? fbData.data.comment_count ?? null;
+        }
+      } catch {}
+    }
+
     return {
       ok: true,
       author: result.author || result.authorDetail?.uniqueId || null,
       avatar: result.authorDetail?.avatar || null,
       video: {
-        description: result.video?.description?.trim() || result.authorDetail?.nickname || '',
-        cover: result.video?.cover || firstPresetThumb || null,
+        description,
+        cover,
         playUrl: result.video?.playUrlNoWm || result.video?.playUrl || null,
         width: result.video?.width || null,
         height: result.video?.height || null,
         stats: {
-          views: result.video?.stats?.views ?? null,
-          likes: result.video?.stats?.likes ?? null,
-          comments: result.video?.stats?.comments ?? null,
+          views,
+          likes,
+          comments,
         },
       },
       presetLinks: (result.presetLinks || []).map((p) => ({
