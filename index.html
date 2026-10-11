@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#171329">
+  <meta name="description" content="Cari preset Alight Motion dari tautan video TikTok dengan AnkraiXMotion.">
+  <title>AnkraiXMotion — Preset Finder</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <div class="ambient ambient-one"></div>
+  <div class="ambient ambient-two"></div>
+
+  <main class="page-shell">
+    <header class="site-header">
+      <a class="brand" href="./" aria-label="AnkraiXMotion beranda">
+        <span class="brand-mark">AX</span>
+        <span class="brand-name">Ankrai<span>X</span>Motion</span>
+      </a>
+      <span class="header-pill"><span class="pulse-dot"></span> PRESET FINDER</span>
+    </header>
+
+    <section class="hero">
+      <div class="eyebrow"><span class="eyebrow-line"></span> ALIGHT MOTION TOOL</div>
+      <h1>Temukan preset.<br><span>Mulai berkreasi.</span></h1>
+      <p class="hero-copy">Tempel tautan video TikTok untuk memeriksa preset Alight Motion yang tersedia.</p>
+    </section>
+
+    <section class="search-card" aria-labelledby="search-title">
+      <div class="section-heading">
+        <div>
+          <p class="section-kicker">PENCARIAN</p>
+          <h2 id="search-title">Masukkan link TikTok</h2>
+        </div>
+        <span class="search-icon" aria-hidden="true">⌕</span>
+      </div>
+      <form id="searchForm">
+        <label for="tiktokUrl">Tautan video</label>
+        <div class="input-wrap">
+          <span class="link-icon" aria-hidden="true">↗</span>
+          <input id="tiktokUrl" name="tiktokUrl" type="url" inputmode="url"
+            placeholder="https://vt.tiktok.com/..." autocomplete="url" required>
+          <button id="clearBtn" class="clear-btn" type="button" aria-label="Hapus tautan" hidden>×</button>
+        </div>
+        <button id="searchBtn" class="primary-btn" type="submit">
+          <span class="button-label">Cari preset</span><span class="button-arrow" aria-hidden="true">→</span>
+        </button>
+      </form>
+      <div id="status" class="status" role="status" aria-live="polite" hidden></div>
+      <p class="privacy-note"><span aria-hidden="true">ⓘ</span> Pencarian memerlukan koneksi internet dan layanan API yang aktif.</p>
+    </section>
+
+    <section id="videoCard" class="content-card video-card" hidden aria-labelledby="videoHeading">
+      <div class="card-topline"><span class="section-kicker">VIDEO DITEMUKAN</span><span id="videoBadge" class="mini-badge">TikTok</span></div>
+      <div class="video-layout">
+        <img id="videoCover" class="video-cover" alt="Sampul video TikTok" hidden>
+        <div id="coverPlaceholder" class="cover-placeholder" aria-hidden="true">▶</div>
+        <div class="video-details">
+          <p id="authorName" class="author-name">@pengguna</p>
+          <h2 id="videoHeading" class="video-description">Deskripsi video</h2>
+          <div class="stats-row">
+            <span>▶ <b id="viewsCount">—</b> tayangan</span>
+            <span>♥ <b id="likesCount">—</b></span>
+            <span>☰ <b id="commentsCount">—</b></span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="presetsSection" class="presets-section" hidden aria-labelledby="presetsHeading">
+      <div class="results-heading">
+        <div><p class="section-kicker">HASIL PENCARIAN</p><h2 id="presetsHeading">Preset tersedia</h2></div>
+        <span id="presetCount" class="count-pill">0 preset</span>
+      </div>
+      <div id="presetList" class="preset-list"></div>
+    </section>
+
+    <section class="channel-card">
+      <div class="channel-symbol" aria-hidden="true">✦</div>
+      <div class="channel-copy">
+        <h2>Ikuti AnkraiXMotion</h2>
+        <p>Dapatkan kabar tentang preset, tutorial, dan pembaruan terbaru.</p>
+      </div>
+      <a class="channel-button" href="https://whatsapp.com/channel/0029VbC1J5S8kyyMKhJ1Na2w"
+         target="_blank" rel="noopener noreferrer">Gabung <span aria-hidden="true">↗</span></a>
+    </section>
+
+    <footer class="site-footer">
+      <span>© <span id="year"></span> AnkraiXMotion</span>
+      <span>Dibuat untuk komunitas kreator</span>
+    </footer>
+  </main>
+</body>
+</html>
