@@ -1,11 +1,10 @@
-// Native Node.js server - serves static files & proxies /api/find to avoid CORS
 const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
+const apiFind = require('./api/find.js');
 
 const PORT = process.env.PORT || 3000;
 const ROOT = __dirname;
-const UPSTREAM = 'https://amfinder.web.id';
 
 const MIME_TYPES = {
   '.html': 'text/html; charset=utf-8',
@@ -18,50 +17,12 @@ const MIME_TYPES = {
   '.ico': 'image/x-icon'
 };
 
-const server = http.createServer(async (req, res) => {
+const server = http.createServer((req, res) => {
   const reqUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
 
-  // CORS headers for all incoming requests
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Accept');
-
-  if (req.method === 'OPTIONS') {
-    res.writeHead(204);
-    return res.end();
-  }
-
-  // Proxy endpoint
+  // Endpoint Vercel Serverless Function
   if (reqUrl.pathname === '/api/find') {
-    const targetUrl = `${UPSTREAM}/api/find${reqUrl.search}`;
-    try {
-      const upstreamRes = await fetch(targetUrl, {
-        method: 'GET',
-        headers: {
-          'Accept': 'text/event-stream, application/json',
-          'User-Agent': 'Mozilla/5.0 (compatible; AnkraiXMotion/1.0)'
-        }
-      });
-
-      res.writeHead(upstreamRes.status, {
-        'Content-Type': upstreamRes.headers.get('content-type') || 'text/event-stream; charset=utf-8',
-        'Cache-Control': 'no-cache, no-transform',
-        'Connection': 'keep-alive'
-      });
-
-      if (!upstreamRes.body) return res.end();
-
-      const reader = upstreamRes.body.getReader();
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        res.write(value);
-      }
-      return res.end();
-    } catch (err) {
-      res.writeHead(502, { 'Content-Type': 'application/json' });
-      return res.end(JSON.stringify({ ok: false, error: 'Gagal menghubungi upstream: ' + err.message }));
-    }
+    return apiFind(req, res);
   }
 
   // Static file serving
