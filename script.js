@@ -1,7 +1,12 @@
 (() => {
   'use strict';
 
-  const API_BASE_URL = 'https://amfinder.web.id';
+  // Gunakan proxy backend lokal jika ada, atau direct upstream
+  const isLocalHost = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+  const API_ENDPOINT = (window.location.protocol.startsWith('http') && !window.location.host.includes('amfinder.web.id'))
+    ? '/api/find'
+    : 'https://amfinder.web.id/api/find';
+
   const REQUEST_TIMEOUT_MS = 60000;
 
   const form = document.getElementById('searchForm');
@@ -13,7 +18,8 @@
   const presetsSection = document.getElementById('presetsSection');
   const presetList = document.getElementById('presetList');
 
-  document.getElementById('year').textContent = new Date().getFullYear();
+  const yearEl = document.getElementById('year');
+  if (yearEl) yearEl.textContent = new Date().getFullYear();
 
   function isValidTikTokUrl(value) {
     const text = (value || '').trim();
@@ -60,82 +66,149 @@
     const decoder = new TextDecoder();
     let buffer = '';
     let currentEvent = null;
+    let dataLines = [];
+
+    const dispatchEvent = () => {
+      if (!currentEvent && dataLines.length === 0) return null;
+      const dataStr = dataLines.join('\n').trim();
+      const evt = currentEvent;
+      currentEvent = null;
+      dataLines = [];
+
+      if (evt === 'result' && dataStr) {
+        try {
+          return JSON.parse(dataStr);
+        } catch {
+          throw new Error('Respons server tidak dapat dibaca.');
+        }
+      }
+      if (evt === 'error' && dataStr) {
+        let detail = 'Server gagal memproses tautan.';
+        try {
+          detail = JSON.parse(dataStr).message || detail;
+        } catch {}
+        throw new Error(detail);
+      }
+      return null;
+    };
 
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
+
       buffer += decoder.decode(value, { stream: true });
       const lines = buffer.split(/\r?\n/);
       buffer = lines.pop() || '';
 
-      for (const line of lines) {
+      for (const rawLine of lines) {
+        const line = rawLine.trimEnd();
+        if (!line) {
+          const res = dispatchEvent();
+          if (res) return res;
+          continue;
+        }
+
         if (line.startsWith('event:')) {
           currentEvent = line.slice(6).trim();
         } else if (line.startsWith('data:')) {
-          const data = line.slice(5).trim();
-          if (currentEvent === 'result') {
-            try { return JSON.parse(data); }
-            catch { throw new Error('Respons server tidak dapat dibaca.'); }
-          }
-          if (currentEvent === 'error') {
-            let detail = 'Server gagal memproses tautan.';
-            try { detail = JSON.parse(data).message || detail; } catch {}
-            throw new Error(detail);
-          }
+          dataLines.push(line.slice(5).trimStart());
         }
       }
     }
-    if (buffer.startsWith('data:') && currentEvent === 'result') {
-      try { return JSON.parse(buffer.slice(5).trim()); } catch {}
+
+    // Flush baris sisa di akhir stream
+    if (buffer.trim()) {
+      const line = buffer.trim();
+      if (line.startsWith('event:')) currentEvent = line.slice(6).trim();
+      else if (line.startsWith('data:')) dataLines.push(line.slice(5).trimStart());
     }
+
+    const finalRes = dispatchEvent();
+    if (finalRes) return finalRes;
+
     throw new Error('Koneksi berakhir sebelum hasil diterima.');
   }
 
   function parseSSEText(text) {
     const lines = text.split(/\r?\n/);
-    let eventName = '';
-    for (const line of lines) {
-      if (line.startsWith('event:')) eventName = line.slice(6).trim();
-      if (line.startsWith('data:')) {
-        const data = line.slice(5).trim();
-        if (eventName === 'result') {
-          try { return JSON.parse(data); } catch { throw new Error('Respons server tidak valid.'); }
+    let eventName = null;
+    let dataLines = [];
+
+    for (const rawLine of lines) {
+      const line = rawLine.trimEnd();
+      if (!line) {
+        if (eventName === 'result' && dataLines.length) {
+          try { return JSON.parse(dataLines.join('\n')); } catch {}
         }
-        if (eventName === 'error') {
-          let message = 'Server gagal memproses tautan.';
-          try { message = JSON.parse(data).message || message; } catch {}
-          throw new Error(message);
+        if (eventName === 'error' && dataLines.length) {
+          let msg = 'Server gagal memproses tautan.';
+          try { msg = JSON.parse(dataLines.join('\n')).message || msg; } catch {}
+          throw new Error(msg);
         }
+        eventName = null;
+        dataLines = [];
+        continue;
+      }
+
+      if (line.startsWith('event:')) {
+        eventName = line.slice(6).trim();
+      } else if (line.startsWith('data:')) {
+        dataLines.push(line.slice(5).trimStart());
       }
     }
+
+    if (eventName === 'result' && dataLines.length) {
+      try { return JSON.parse(dataLines.join('\n')); } catch {}
+    }
+
+    // Coba fallback parse JSON langsung
     try {
       const json = JSON.parse(text);
       if (json && typeof json === 'object') return json;
     } catch {}
+
     throw new Error('Server tidak mengirim hasil yang dikenali.');
   }
 
   async function getPresetLinks(tiktokUrl) {
-    const apiUrl = `${API_BASE_URL}/api/find?url=${encodeURIComponent(tiktokUrl)}`;
+    const fetchUrl = `${API_ENDPOINT}?url=${encodeURIComponent(tiktokUrl)}`;
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
     try {
-      const response = await fetch(apiUrl, {
-        method: 'GET',
-        headers: { 'Accept': 'text/event-stream, application/json' },
-        signal: controller.signal
-      });
+      let response;
+      try {
+        response = await fetch(fetchUrl, {
+          method: 'GET',
+          headers: { 'Accept': 'text/event-stream, application/json' },
+          signal: controller.signal
+        });
+      } catch (err) {
+        // Jika fetch endpoint lokal gagal (misal dijalankan via file://), coba direct amfinder
+        if (API_ENDPOINT !== 'https://amfinder.web.id/api/find') {
+          response = await fetch(`https://amfinder.web.id/api/find?url=${encodeURIComponent(tiktokUrl)}`, {
+            method: 'GET',
+            headers: { 'Accept': 'text/event-stream, application/json' },
+            signal: controller.signal
+          });
+        } else {
+          throw err;
+        }
+      }
 
       if (!response.ok) throw new Error(`Server merespons dengan status ${response.status}.`);
       const result = await parseSSEStream(response);
-      if (result.ok === false) throw new Error(result.error || 'Server tidak dapat memproses tautan ini.');
+      if (result.ok === false) throw new Error(result.message || result.error || 'Server tidak dapat memproses tautan ini.');
+
+      // Cari cover fallback jika video cover null
+      const firstPresetThumb = (result.presetLinks || []).find(p => p.thumb)?.thumb;
+      const coverUrl = result.video?.cover || firstPresetThumb || result.authorDetail?.avatar || null;
 
       return {
-        author: result.author || null,
+        author: result.author || result.authorDetail?.uniqueId || null,
         video: {
-          description: result.video?.description?.trim() || '',
-          cover: result.video?.cover || null,
+          description: result.video?.description?.trim() || result.authorDetail?.nickname || '',
+          cover: coverUrl,
           stats: {
             views: result.video?.stats?.views ?? null,
             likes: result.video?.stats?.likes ?? null,
@@ -147,6 +220,7 @@
           url: p.url || '',
           type: p.type || 'xml',
           size: p.size || null,
+          thumb: p.thumb || null,
           pinned: Boolean(p.pinned),
           byAuthor: Boolean(p.byAuthor)
         })).filter(p => isSafeHttpUrl(p.url))
@@ -154,7 +228,7 @@
     } catch (error) {
       if (error.name === 'AbortError') throw new Error('Permintaan terlalu lama. Coba lagi.');
       if (error instanceof TypeError) {
-        throw new Error('Tidak bisa menghubungi API. Bisa jadi server memblokir akses browser (CORS) atau sedang tidak tersedia.');
+        throw new Error('Tidak bisa menghubungi API. Pastikan server lokal aktif (npm start) atau tidak terblokir CORS.');
       }
       throw error;
     } finally {
@@ -192,8 +266,11 @@
       placeholder.hidden = false;
     }
 
-    document.getElementById('authorName').textContent = result.author ? `@${result.author}` : 'Informasi kreator tidak tersedia';
-    document.getElementById('videoHeading').textContent = result.video.description || 'Video tanpa deskripsi';
+    const rawAuthor = result.author || '';
+    const cleanAuthor = rawAuthor ? (rawAuthor.startsWith('@') ? rawAuthor : `@${rawAuthor}`) : 'Informasi kreator tidak tersedia';
+
+    document.getElementById('authorName').textContent = cleanAuthor;
+    document.getElementById('videoHeading').textContent = result.video.description || 'Preset Alight Motion';
     document.getElementById('viewsCount').textContent = formatNumber(result.video.stats.views);
     document.getElementById('likesCount').textContent = formatNumber(result.video.stats.likes);
     document.getElementById('commentsCount').textContent = formatNumber(result.video.stats.comments);
@@ -268,7 +345,7 @@
     searchBtn.disabled = true;
     searchBtn.querySelector('.button-label').textContent = 'Sedang mencari…';
     searchBtn.querySelector('.button-arrow').textContent = '…';
-    setStatus('info', 'Menghubungi server dan mencari preset. Proses ini bisa memerlukan waktu hingga 60 detik.');
+    setStatus('info', 'Menghubungi server dan mencari preset. Proses ini memerlukan waktu hingga 60 detik...');
 
     try {
       const result = await getPresetLinks(url);

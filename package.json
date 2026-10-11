@@ -1,0 +1,13 @@
+{
+  "name": "ankraixmotion-preset-finder",
+  "version": "1.0.0",
+  "description": "Cari preset Alight Motion dari tautan video TikTok",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node -e \"console.log('OK')\""
+  },
+  "keywords": ["tiktok", "alight-motion", "preset-finder"],
+  "author": "uanhoerulanam",
+  "license": "ISC"
+}
