@@ -771,3 +771,201 @@ input:focus-visible {
     transition: none !important;
   }
 }
+
+/* ===== TEMA AXM: BLACK + BLUE + PURPLE ===== */
+
+:root {
+  --bg: #080910;
+  --panel: #11121b;
+  --panel-soft: #191a28;
+  --line: #292b40;
+  --text: #f5f6ff;
+  --muted: #a0a4bb;
+  --green: #9aa7ff;
+  --blue: #38aaff;
+  --danger: #ff858f;
+}
+
+/* Cahaya latar biru dan ungu */
+.ambient-one {
+  background: #087cff;
+  opacity: 0.17;
+}
+
+.ambient-two {
+  background: #b20cff;
+  opacity: 0.16;
+}
+
+/* Logo AX */
+.brand-mark {
+  border-color: rgba(56, 170, 255, 0.55);
+  background: linear-gradient(135deg, #102b54, #321348);
+  color: #ffffff;
+  box-shadow: 0 0 18px rgba(56, 130, 255, 0.12);
+}
+
+.brand-name span {
+  color: #b86bff;
+}
+
+/* Aksen judul dan label */
+.pulse-dot {
+  background: #65e5ff;
+  box-shadow: 0 0 12px rgba(56, 170, 255, 0.7);
+}
+
+.eyebrow,
+.section-kicker {
+  color: #72c7ff;
+}
+
+.eyebrow-line {
+  background: linear-gradient(90deg, #168cff, #c04dff);
+}
+
+.hero h1 span {
+  background: linear-gradient(90deg, #54baff, #c77aff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Bingkai pencarian */
+.search-card,
+.content-card,
+.channel-card {
+  border-color: #292b43;
+  background: linear-gradient(
+    145deg,
+    rgba(23, 26, 43, 0.97),
+    rgba(14, 14, 23, 0.98)
+  );
+  box-shadow: 0 16px 45px rgba(0, 0, 0, 0.2);
+}
+
+.input-wrap:focus-within {
+  border-color: #6b8fff;
+}
+
+.link-icon,
+.search-icon {
+  color: #7bbcff;
+}
+
+.search-icon {
+  border-color: #35324f;
+  background: linear-gradient(135deg, #172744, #291938);
+}
+
+/* Tombol utama: gradasi biru ke ungu */
+.primary-btn {
+  background: linear-gradient(100deg, #168cff, #8555ff, #c34cff);
+  color: #ffffff;
+  box-shadow: 0 5px 22px rgba(105, 76, 255, 0.18);
+}
+
+/* Pesan status */
+.status.info {
+  border-color: #344c80;
+  color: #a9d6ff;
+}
+
+.status.success {
+  border-color: #3b426b;
+  color: #b7c6ff;
+}
+
+.status.error {
+  border-color: #653a42;
+  color: #ff858f;
+}
+
+/* Pemutar video */
+.tiktok-player {
+  border-color: #39324f;
+  box-shadow: 0 0 22px rgba(99, 71, 255, 0.08);
+}
+
+/* Label video */
+.author-name {
+  color: #8ccaff;
+}
+
+.mini-badge,
+.count-pill {
+  border-color: #373451;
+  background: linear-gradient(100deg, #192b45, #2c1c3d);
+  color: #c4a4ff;
+}
+
+/* Kartu preset */
+.preset-item {
+  border-color: #2d2e45;
+  background: linear-gradient(
+    120deg,
+    rgba(25, 29, 48, 0.96),
+    rgba(20, 17, 31, 0.96)
+  );
+}
+
+.preset-symbol {
+  border-color: #39365e;
+  background: linear-gradient(145deg, #14365d, #422054);
+  color: #bca4ff;
+}
+
+.badge {
+  border-color: #354e76;
+  background: #172941;
+  color: #8dcaff;
+}
+
+.badge.xml {
+  border-color: #514078;
+  background: #2b2042;
+  color: #d0a3ff;
+}
+
+.badge.size {
+  border-color: #414156;
+  background: #252538;
+  color: #c5c8e0;
+}
+
+.badge.pinned {
+  border-color: #65552d;
+  background: #342d1b;
+  color: #ffd779;
+}
+
+/* Tombol salin dan buka tautan */
+.copy-btn {
+  border-color: #373951;
+  background: linear-gradient(110deg, #252b40, #30253f);
+  color: #f4f3ff;
+}
+
+.open-btn {
+  border-color: #4a3976;
+  background: linear-gradient(110deg, #1b3655, #3b2050);
+  color: #d5bdff;
+}
+
+/* Bagian WhatsApp */
+.channel-symbol {
+  border-color: #3d477d;
+  background: linear-gradient(135deg, #173c66, #45235d);
+  color: #c5b1ff;
+}
+
+.channel-button {
+  background: linear-gradient(100deg, #238cff, #a14dff);
+  color: #ffffff;
+}
+
+/* Warna pilihan teks */
+::selection {
+  background: rgba(117, 93, 255, 0.4);
+  color: #ffffff;
+}
