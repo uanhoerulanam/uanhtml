@@ -1,10 +1,11 @@
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="referrer" content="no-referrer">
-  <meta name="theme-color" content="#171329">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <meta name="theme-color" content="#101116">
   <meta name="description" content="Cari preset Alight Motion dari tautan video TikTok dengan AnkraiXMotion.">
   <title>AnkraiXMotion — Preset Finder</title>
   <link rel="stylesheet" href="style.css">
@@ -20,13 +21,23 @@
         <span class="brand-mark">AX</span>
         <span class="brand-name">Ankrai<span>X</span>Motion</span>
       </a>
-      <span class="header-pill"><span class="pulse-dot"></span> PRESET FINDER</span>
+      <span class="header-pill">
+        <span class="pulse-dot"></span>
+        PRESET FINDER
+      </span>
     </header>
 
     <section class="hero">
-      <div class="eyebrow"><span class="eyebrow-line"></span> ALIGHT MOTION TOOL</div>
+      <div class="eyebrow">
+        <span class="eyebrow-line"></span>
+        ALIGHT MOTION TOOL
+      </div>
+
       <h1>Temukan preset.<br><span>Mulai berkreasi.</span></h1>
-      <p class="hero-copy">Tempel tautan video TikTok untuk memeriksa preset Alight Motion yang tersedia.</p>
+
+      <p class="hero-copy">
+        Tempel tautan video TikTok untuk mencari preset Alight Motion yang tersedia.
+      </p>
     </section>
 
     <section class="search-card" aria-labelledby="search-title">
@@ -37,30 +48,84 @@
         </div>
         <span class="search-icon" aria-hidden="true">⌕</span>
       </div>
+
       <form id="searchForm">
         <label for="tiktokUrl">Tautan video</label>
+
         <div class="input-wrap">
           <span class="link-icon" aria-hidden="true">↗</span>
-          <input id="tiktokUrl" name="tiktokUrl" type="url" inputmode="url"
-            placeholder="https://vt.tiktok.com/..." autocomplete="url" required>
-          <button id="clearBtn" class="clear-btn" type="button" aria-label="Hapus tautan" hidden>×</button>
+
+          <input
+            id="tiktokUrl"
+            name="tiktokUrl"
+            type="url"
+            inputmode="url"
+            placeholder="https://vt.tiktok.com/xxxxx/"
+            autocomplete="url"
+            required
+          >
+
+          <button
+            id="clearBtn"
+            class="clear-btn"
+            type="button"
+            aria-label="Hapus tautan"
+            hidden
+          >×</button>
         </div>
+
         <button id="searchBtn" class="primary-btn" type="submit">
-          <span class="button-label">Cari preset</span><span class="button-arrow" aria-hidden="true">→</span>
+          <span class="button-label">Cari preset</span>
+          <span class="button-arrow" aria-hidden="true">→</span>
         </button>
       </form>
+
       <div id="status" class="status" role="status" aria-live="polite" hidden></div>
-      <p class="privacy-note"><span aria-hidden="true">ⓘ</span> Pencarian memerlukan koneksi internet dan layanan API yang aktif.</p>
+
+      <p class="privacy-note">
+        <span aria-hidden="true">ⓘ</span>
+        Pencarian memerlukan koneksi internet dan layanan API yang aktif.
+      </p>
     </section>
 
-    <section id="videoCard" class="content-card video-card" hidden aria-labelledby="videoHeading">
-      <div class="card-topline"><span class="section-kicker">VIDEO DITEMUKAN</span><span id="videoBadge" class="mini-badge">TikTok</span></div>
+    <section
+      id="videoCard"
+      class="content-card video-card"
+      hidden
+      aria-labelledby="videoHeading"
+    >
+      <div class="card-topline">
+        <span class="section-kicker">VIDEO DITEMUKAN</span>
+        <span id="videoBadge" class="mini-badge">TikTok</span>
+      </div>
+
+      <div id="tiktokPlayer" class="tiktok-player" hidden>
+        <iframe
+          id="tiktokFrame"
+          title="Pemutar video TikTok"
+          src="about:blank"
+          loading="lazy"
+          allow="fullscreen"
+          allowfullscreen
+          referrerpolicy="strict-origin-when-cross-origin"
+        ></iframe>
+      </div>
+
       <div class="video-layout">
-        <img id="videoCover" class="video-cover" alt="Sampul video TikTok" referrerpolicy="no-referrer" hidden>
+        <img
+          id="videoCover"
+          class="video-cover"
+          alt="Sampul video TikTok"
+          referrerpolicy="no-referrer"
+          hidden
+        >
+
         <div id="coverPlaceholder" class="cover-placeholder" aria-hidden="true">▶</div>
+
         <div class="video-details">
           <p id="authorName" class="author-name">@pengguna</p>
           <h2 id="videoHeading" class="video-description">Deskripsi video</h2>
+
           <div class="stats-row">
             <span>▶ <b id="viewsCount">—</b> tayangan</span>
             <span>♥ <b id="likesCount">—</b></span>
@@ -70,27 +135,47 @@
       </div>
     </section>
 
-    <section id="presetsSection" class="presets-section" hidden aria-labelledby="presetsHeading">
+    <section
+      id="presetsSection"
+      class="presets-section"
+      hidden
+      aria-labelledby="presetsHeading"
+    >
       <div class="results-heading">
-        <div><p class="section-kicker">HASIL PENCARIAN</p><h2 id="presetsHeading">Preset tersedia</h2></div>
+        <div>
+          <p class="section-kicker">HASIL PENCARIAN</p>
+          <h2 id="presetsHeading">Preset tersedia</h2>
+        </div>
         <span id="presetCount" class="count-pill">0 preset</span>
       </div>
+
       <div id="presetList" class="preset-list"></div>
     </section>
 
     <section class="channel-card">
       <div class="channel-symbol" aria-hidden="true">✦</div>
+
       <div class="channel-copy">
         <h2>Ikuti AnkraiXMotion</h2>
-        <p>Gabung saluran Ankraixmotion untuk mendapatkan berbagai aplikasi mod dan informasi menarik lainnya!.</p>
+        <p>
+          Gabung saluran WhatsApp AnkraiXMotion untuk mendapatkan
+          aplikasi mod dan konten menarik lainnya.
+        </p>
       </div>
-      <a class="channel-button" href="https://whatsapp.com/channel/0029VbC1J5S8kyyMKhJ1Na2w"
-         target="_blank" rel="noopener noreferrer">Gabung <span aria-hidden="true">↗</span></a>
+
+      <a
+        class="channel-button"
+        href="https://whatsapp.com/channel/0029VbC1J5S8kyyMKhJ1Na2w"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        Gabung <span aria-hidden="true">↗</span>
+      </a>
     </section>
 
     <footer class="site-footer">
       <span>© <span id="year"></span> AnkraiXMotion</span>
-      <span>Dibuat untuk komunitas kreator</span>
+      <span>POLOW TIKTOK ANKRAIXMOTION</span>
     </footer>
   </main>
 </body>
