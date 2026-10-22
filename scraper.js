@@ -1,12 +1,24 @@
 /**
- * AM Preset Finder Scraper
+ * AM Preset Finder Scraper (Updated Version)
  * Source: https://amfinder.web.id
- *
- * Scans TikTok video description, bio, comments, and bio-link
- * to extract Alight Motion preset links.
  */
 
 const BASE_URL = 'https://amfinder.web.id';
+
+// HEADERS PALSU (Meniru Google Chrome asli di Windows)
+// Ini sangat penting agar tidak diblokir sistem anti-bot TikTok/Vercel
+const BROWSER_HEADERS = {
+  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+  'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+  'Accept-Language': 'en-US,en;q=0.9,id;q=0.8',
+  'Referer': 'https://www.tiktok.com/',
+  'Sec-Fetch-Dest': 'document',
+  'Sec-Fetch-Mode': 'navigate',
+  'Sec-Fetch-Site': 'none',
+  'Sec-Fetch-User': '?1',
+  // OPSIONAL: Jika masih 403, buka TikTok di browser PC, login, lalu copy Cookie-nya ke sini.
+  // 'Cookie': 'tt_webid_v2=MASUKKAN_DEVICE_ID_DISINI; ms_token=MASUKKAN_TOKEN_DISINI;'
+};
 
 function isValidTikTokUrl(url) {
   const trimmed = (url || '').trim();
@@ -105,11 +117,12 @@ async function get_preset_links(link_tiktok) {
   const timeout = setTimeout(() => controller.abort(), 60_000);
 
   try {
+    // Request ke API Utama (amfinder.web.id)
     const response = await fetch(apiUrl, {
       method: 'GET',
       headers: {
-        'Accept': 'text/event-stream',
-        'User-Agent': 'Mozilla/5.0 (compatible; AMFinderScraper/1.0)',
+        ...BROWSER_HEADERS,
+        'Accept': 'text/event-stream', // Wajib untuk Server-Sent Events
       },
       signal: controller.signal,
     });
@@ -137,9 +150,12 @@ async function get_preset_links(link_tiktok) {
     let likes = result.video?.stats?.likes ?? null;
     let comments = result.video?.stats?.comments ?? null;
 
+    // FALLBACK 1: Jika API utama tidak memberikan cover atau views, ambil dari tikwm.com
     if (!cover || views == null) {
       try {
-        const fb = await fetch(`https://www.tikwm.com/api/?url=${encodeURIComponent(url)}`);
+        const fb = await fetch(`https://www.tikwm.com/api/?url=${encodeURIComponent(url)}`, {
+          headers: BROWSER_HEADERS
+        });
         const fbData = await fb.json();
         if (fbData?.code === 0 && fbData.data) {
           cover = cover || fbData.data.cover || fbData.data.origin_cover || null;
@@ -148,7 +164,9 @@ async function get_preset_links(link_tiktok) {
           likes = likes ?? fbData.data.digg_count ?? null;
           comments = comments ?? fbData.data.comment_count ?? null;
         }
-      } catch {}
+      } catch (e) {
+        console.error('Fallback tikwm error:', e.message);
+      }
     }
 
     return {
@@ -191,6 +209,7 @@ async function get_preset_links(link_tiktok) {
 
 module.exports = { get_preset_links };
 
+// Blok untuk testing via terminal (opsional)
 if (require.main === module) {
   (async () => {
     try {
