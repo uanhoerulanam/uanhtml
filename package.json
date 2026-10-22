@@ -9,5 +9,8 @@
   },
   "keywords": ["tiktok", "alight-motion", "preset-finder"],
   "author": "uanhoerulanam",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "node-curl-impersonate": "^2.1.0"
+  }
 }
