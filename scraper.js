@@ -1,13 +1,13 @@
 /**
- * AM Preset Finder Scraper (Proxy Edition)
- * Menggunakan library "impers" dan Webshare Proxy
+ * AM Preset Finder Scraper (Proxy Edition 2)
+ * Menggunakan library "impers" dan Webshare Proxy (IP Baris 2)
  */
 
 const { fetch } = require('impers'); 
 
 const BASE_URL = 'https://amfinder.web.id';
-// Alamat proxy dari Webshare (baris pertama)
-const PROXY_URL = 'http://bwjzartd:3bva829f5zgj@45.38.107.97:6014';
+// Alamat proxy dari Webshare (baris kedua)
+const PROXY_URL = 'http://bwjzartd:3bva829f5zgj@64.137.96.74:6641';
 
 const BROWSER_HEADERS = {
   'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
@@ -92,7 +92,7 @@ async function get_preset_links(link_tiktok) {
     const response = await fetch(apiUrl, {
       method: 'GET',
       impersonate: 'chrome124',
-      proxy: PROXY_URL, // <-- Memakai proxy
+      proxy: PROXY_URL, 
       headers: {
         ...BROWSER_HEADERS,
         'Accept': 'text/event-stream',
@@ -120,7 +120,7 @@ async function get_preset_links(link_tiktok) {
       try {
         const fb = await fetch(`https://www.tikwm.com/api/?url=${encodeURIComponent(url)}`, {
           impersonate: 'chrome124',
-          proxy: PROXY_URL, // <-- Memakai proxy yang sama
+          proxy: PROXY_URL, 
           headers: BROWSER_HEADERS
         });
         const fbData = await fb.json();
