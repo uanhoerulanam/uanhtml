@@ -1,13 +1,12 @@
 /**
- * AM Preset Finder Scraper (Vercel Bypass Edition)
- * Source: https://amfinder.web.id
+ * AM Preset Finder Scraper (Final Edition)
+ * Menggunakan library "impers" untuk bypass proteksi TLS Vercel
  */
 
-const { fetch } = require('node-curl-impersonate'); // <-- Import library impersonasi
+const { fetch } = require('impers'); 
 
 const BASE_URL = 'https://amfinder.web.id';
 
-// Header tetap dipertahankan untuk berjaga-jaga
 const BROWSER_HEADERS = {
   'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
   'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
@@ -37,7 +36,6 @@ async function parseSSEStream(response) {
     if (evt === 'result' && dataStr) {
       try { return JSON.parse(dataStr); } catch { throw new Error('Unreadable response from server'); }
     }
-
     if (evt === 'error' && dataStr) {
       try {
         const err = JSON.parse(dataStr);
@@ -53,11 +51,9 @@ async function parseSSEStream(response) {
   while (true) {
     const { done, value } = await reader.read();
     if (done) break;
-
     buffer += decoder.decode(value, { stream: true });
     const lines = buffer.split(/\r?\n/);
     buffer = lines.pop() || '';
-
     for (const rawLine of lines) {
       const line = rawLine.trimEnd();
       if (!line) {
@@ -65,21 +61,17 @@ async function parseSSEStream(response) {
         if (res) return res;
         continue;
       }
-
       if (line.startsWith('event:')) currentEvent = line.slice(6).trim();
       else if (line.startsWith('data:')) dataLines.push(line.slice(5).trimStart());
     }
   }
-
   if (buffer.trim()) {
     const line = buffer.trim();
     if (line.startsWith('event:')) currentEvent = line.slice(6).trim();
     else if (line.startsWith('data:')) dataLines.push(line.slice(5).trimStart());
   }
-
   const finalRes = dispatchEvent();
   if (finalRes) return finalRes;
-
   throw new Error('Connection closed before it finished, try again');
 }
 
@@ -94,10 +86,10 @@ async function get_preset_links(link_tiktok) {
   const timeout = setTimeout(() => controller.abort(), 60_000);
 
   try {
-    // REQUEST KE API UTAMA DENGAN IMPERSONASI BROWSER
+    // REQUEST MENGGUNAKAN IMPERS
     const response = await fetch(apiUrl, {
       method: 'GET',
-      impersonate: 'chrome146', // <-- KUNCI UTAMA: Meniru sidik jari TLS Chrome
+      impersonate: 'chrome124',
       headers: {
         ...BROWSER_HEADERS,
         'Accept': 'text/event-stream',
@@ -111,7 +103,6 @@ async function get_preset_links(link_tiktok) {
     if (!contentType.includes('text/event-stream')) throw new Error('Unexpected response format from server');
 
     const result = await parseSSEStream(response);
-
     if (result.ok === false) throw new Error(result.error || result.message || 'The scraper could not process this link');
 
     const firstPresetThumb = (result.presetLinks || []).find(p => p.thumb)?.thumb;
@@ -121,11 +112,11 @@ async function get_preset_links(link_tiktok) {
     let likes = result.video?.stats?.likes ?? null;
     let comments = result.video?.stats?.comments ?? null;
 
-    // FALLBACK KE TIKWM.COM (JUGA DENGAN IMPERSONASI)
+    // Fallback ke tikwm.com jika API utama gagal
     if (!cover || views == null) {
       try {
         const fb = await fetch(`https://www.tikwm.com/api/?url=${encodeURIComponent(url)}`, {
-          impersonate: 'chrome146', // <-- Impersonasi di sini juga
+          impersonate: 'chrome124',
           headers: BROWSER_HEADERS
         });
         const fbData = await fb.json();
@@ -164,24 +155,3 @@ async function get_preset_links(link_tiktok) {
 }
 
 module.exports = { get_preset_links };
-
-// Blok testing
-if (require.main === module) {
-  (async () => {
-    try {
-      const testUrl = process.argv[2] || 'https://vt.tiktok.com/ZSbmR9kCu/';
-      console.log('Menguji scraper dengan:', testUrl);
-      const result = await get_preset_links(testUrl);
-      console.log('✅ Author:', result.author);
-      console.log('📊 Views:', result.video.stats.views);
-      console.log(`🔗 Ditemukan ${result.presetLinks.length} preset:\n`);
-      for (const preset of result.presetLinks) {
-        console.log(`  📌 ${preset.title}`);
-        console.log(`     URL: ${preset.url}`);
-      }
-    } catch (err) {
-      console.error('❌ Error:', err.message);
-      process.exit(1);
-    }
-  })();
-}
