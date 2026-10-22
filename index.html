@@ -1,182 +1,158 @@
+/**
+ * AM Preset Finder Scraper (Final Edition)
+ * Menggunakan library "impers" untuk bypass proteksi TLS Vercel
+ */
 
-<!DOCTYPE html>
-<html lang="id">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="referrer" content="strict-origin-when-cross-origin">
-  <meta name="theme-color" content="#101116">
-  <meta name="description" content="Cari preset Alight Motion dari tautan video TikTok dengan AnkraiXMotion.">
-  <title>AnkraiXMotion — Preset Finder</title>
-  <link rel="stylesheet" href="style.css">
-  <script src="script.js" defer></script>
-</head>
-<body>
-  <div class="ambient ambient-one"></div>
-  <div class="ambient ambient-two"></div>
+const { fetch } = require('impers'); // <-- Menggunakan library impers
 
-  <main class="page-shell">
-    <header class="site-header">
-      <a class="brand" href="./" aria-label="AnkraiXMotion beranda">
-        <span class="brand-mark">AX</span>
-        <span class="brand-name">Ankrai<span>X</span>Motion</span>
-      </a>
-      <span class="header-pill">
-        <span class="pulse-dot"></span>
-        PRESET FINDER
-      </span>
-    </header>
+const BASE_URL = 'https://amfinder.web.id';
 
-    <section class="hero">
-      <div class="eyebrow">
-        <span class="eyebrow-line"></span>
-        ALIGHT MOTION TOOL
-      </div>
+const BROWSER_HEADERS = {
+  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+  'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+  'Accept-Language': 'en-US,en;q=0.9,id;q=0.8',
+  'Referer': 'https://www.tiktok.com/',
+};
 
-      <h1>Temukan preset.<br><span>Mulai berkreasi.</span></h1>
+function isValidTikTokUrl(url) {
+  const trimmed = (url || '').trim();
+  return /tiktok\.com/i.test(trimmed) || /^\d{15,}$/.test(trimmed);
+}
 
-      <p class="hero-copy">
-        Tempel tautan video TikTok untuk mencari preset Alight Motion yang tersedia.
-      </p>
-    </section>
+// ... (fungsi parseSSEStream tetap sama seperti sebelumnya) ...
+async function parseSSEStream(response) {
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+  let currentEvent = null;
+  let dataLines = [];
 
-    <section class="search-card" aria-labelledby="search-title">
-      <div class="section-heading">
-        <div>
-          <p class="section-kicker">PENCARIAN</p>
-          <h2 id="search-title">Masukkan link TikTok</h2>
-        </div>
-        <span class="search-icon" aria-hidden="true">⌕</span>
-      </div>
+  const dispatchEvent = () => {
+    if (!currentEvent && dataLines.length === 0) return null;
+    const dataStr = dataLines.join('\n').trim();
+    const evt = currentEvent;
+    currentEvent = null;
+    dataLines = [];
 
-      <form id="searchForm">
-        <label for="tiktokUrl">Tautan video</label>
+    if (evt === 'result' && dataStr) {
+      try { return JSON.parse(dataStr); } catch { throw new Error('Unreadable response from server'); }
+    }
+    if (evt === 'error' && dataStr) {
+      try {
+        const err = JSON.parse(dataStr);
+        throw new Error(err.message || 'Something went wrong');
+      } catch (e) {
+        if (e instanceof SyntaxError) throw new Error('Something went wrong, try again');
+        throw e;
+      }
+    }
+    return null;
+  };
 
-        <div class="input-wrap">
-          <span class="link-icon" aria-hidden="true">↗</span>
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split(/\r?\n/);
+    buffer = lines.pop() || '';
+    for (const rawLine of lines) {
+      const line = rawLine.trimEnd();
+      if (!line) {
+        const res = dispatchEvent();
+        if (res) return res;
+        continue;
+      }
+      if (line.startsWith('event:')) currentEvent = line.slice(6).trim();
+      else if (line.startsWith('data:')) dataLines.push(line.slice(5).trimStart());
+    }
+  }
+  if (buffer.trim()) {
+    const line = buffer.trim();
+    if (line.startsWith('event:')) currentEvent = line.slice(6).trim();
+    else if (line.startsWith('data:')) dataLines.push(line.slice(5).trimStart());
+  }
+  const finalRes = dispatchEvent();
+  if (finalRes) return finalRes;
+  throw new Error('Connection closed before it finished, try again');
+}
 
-          <input
-            id="tiktokUrl"
-            name="tiktokUrl"
-            type="url"
-            inputmode="url"
-            placeholder="https://vt.tiktok.com/xxxxx/"
-            autocomplete="url"
-            required
-          >
+async function get_preset_links(link_tiktok) {
+  const url = (link_tiktok || '').trim();
 
-          <button
-            id="clearBtn"
-            class="clear-btn"
-            type="button"
-            aria-label="Hapus tautan"
-            hidden
-          >×</button>
-        </div>
+  if (!url) throw new Error('TikTok video link is required');
+  if (!isValidTikTokUrl(url)) throw new Error('That link is not from TikTok. Paste a TikTok video link first.');
 
-        <button id="searchBtn" class="primary-btn" type="submit">
-          <span class="button-label">Cari preset</span>
-          <span class="button-arrow" aria-hidden="true">→</span>
-        </button>
-      </form>
+  const apiUrl = `${BASE_URL}/api/find?url=${encodeURIComponent(url)}`;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 60_000);
 
-      <div id="status" class="status" role="status" aria-live="polite" hidden></div>
+  try {
+    // REQUEST MENGGUNAKAN IMPERS
+    const response = await fetch(apiUrl, {
+      method: 'GET',
+      impersonate: 'chrome124', // <-- Meniru sidik jari TLS Chrome 124
+      headers: {
+        ...BROWSER_HEADERS,
+        'Accept': 'text/event-stream',
+      },
+      signal: controller.signal,
+    });
 
-      <p class="privacy-note">
-        <span aria-hidden="true">ⓘ</span>
-        Pencarian memerlukan koneksi internet dan layanan API yang aktif.
-      </p>
-    </section>
+    if (!response.ok) throw new Error(`Server responded with status ${response.status}`);
 
-    <section
-      id="videoCard"
-      class="content-card video-card"
-      hidden
-      aria-labelledby="videoHeading"
-    >
-      <div class="card-topline">
-        <span class="section-kicker">VIDEO DITEMUKAN</span>
-        <span id="videoBadge" class="mini-badge">TikTok</span>
-      </div>
+    const contentType = response.headers.get('content-type') || '';
+    if (!contentType.includes('text/event-stream')) throw new Error('Unexpected response format from server');
 
-      <div id="tiktokPlayer" class="tiktok-player" hidden>
-        <iframe
-          id="tiktokFrame"
-          title="Pemutar video TikTok"
-          src="about:blank"
-          loading="lazy"
-          allow="fullscreen"
-          allowfullscreen
-          referrerpolicy="strict-origin-when-cross-origin"
-        ></iframe>
-      </div>
+    const result = await parseSSEStream(response);
+    if (result.ok === false) throw new Error(result.error || result.message || 'The scraper could not process this link');
 
-      <div class="video-layout">
-        <img
-          id="videoCover"
-          class="video-cover"
-          alt="Sampul video TikTok"
-          referrerpolicy="no-referrer"
-          hidden
-        >
+    const firstPresetThumb = (result.presetLinks || []).find(p => p.thumb)?.thumb;
+    let cover = result.video?.cover || firstPresetThumb || null;
+    let description = result.video?.description?.trim() || result.authorDetail?.nickname || '';
+    let views = result.video?.stats?.views ?? null;
+    let likes = result.video?.stats?.likes ?? null;
+    let comments = result.video?.stats?.comments ?? null;
 
-        <div id="coverPlaceholder" class="cover-placeholder" aria-hidden="true">▶</div>
+    // Fallback ke tikwm.com
+    if (!cover || views == null) {
+      try {
+        const fb = await fetch(`https://www.tikwm.com/api/?url=${encodeURIComponent(url)}`, {
+          impersonate: 'chrome124',
+          headers: BROWSER_HEADERS
+        });
+        const fbData = await fb.json();
+        if (fbData?.code === 0 && fbData.data) {
+          cover = cover || fbData.data.cover || fbData.data.origin_cover || null;
+          description = description || fbData.data.title || '';
+          views = views ?? fbData.data.play_count ?? null;
+          likes = likes ?? fbData.data.digg_count ?? null;
+          comments = comments ?? fbData.data.comment_count ?? null;
+        }
+      } catch (e) { console.error('Fallback tikwm error:', e.message); }
+    }
 
-        <div class="video-details">
-          <p id="authorName" class="author-name">@pengguna</p>
-          <h2 id="videoHeading" class="video-description">Deskripsi video</h2>
+    return {
+      ok: true,
+      author: result.author || result.authorDetail?.uniqueId || null,
+      avatar: result.authorDetail?.avatar || null,
+      video: {
+        description, cover,
+        playUrl: result.video?.playUrlNoWm || result.video?.playUrl || null,
+        width: result.video?.width || null, height: result.video?.height || null,
+        stats: { views, likes, comments },
+      },
+      presetLinks: (result.presetLinks || []).map((p) => ({
+        title: p.title || (p.type === '5mb' ? '5MB preset' : 'XML file'),
+        url: p.url, type: p.type, size: p.size || null, ratio: p.ratio || null,
+        thumb: p.thumb || null, pinned: !!p.pinned, byAuthor: !!p.byAuthor, detail: p.detail || null,
+      })),
+    };
+  } catch (err) {
+    if (err.name === 'AbortError') throw new Error('Request timed out. Please try again.');
+    throw err;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
 
-          <div class="stats-row">
-            <span>▶ <b id="viewsCount">—</b> tayangan</span>
-            <span>♥ <b id="likesCount">—</b></span>
-            <span>☰ <b id="commentsCount">—</b></span>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section
-      id="presetsSection"
-      class="presets-section"
-      hidden
-      aria-labelledby="presetsHeading"
-    >
-      <div class="results-heading">
-        <div>
-          <p class="section-kicker">HASIL PENCARIAN</p>
-          <h2 id="presetsHeading">Preset tersedia</h2>
-        </div>
-        <span id="presetCount" class="count-pill">0 preset</span>
-      </div>
-
-      <div id="presetList" class="preset-list"></div>
-    </section>
-
-    <section class="channel-card">
-      <div class="channel-symbol" aria-hidden="true">✦</div>
-
-      <div class="channel-copy">
-        <h2>Ikuti AnkraiXMotion</h2>
-        <p>
-          Gabung saluran WhatsApp AnkraiXMotion untuk mendapatkan
-          aplikasi mod dan konten menarik lainnya.
-        </p>
-      </div>
-
-      <a
-        class="channel-button"
-        href="https://whatsapp.com/channel/0029VbC1J5S8kyyMKhJ1Na2w"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        Gabung <span aria-hidden="true">↗</span>
-      </a>
-    </section>
-
-    <footer class="site-footer">
-      <span>© <span id="year"></span> AnkraiXMotion</span>
-      <span>POLOW TIKTOK ANKRAIXMOTION</span>
-    </footer>
-  </main>
-</body>
-</html>
+module.exports = { get_preset_links };
