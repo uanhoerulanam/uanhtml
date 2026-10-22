@@ -1,11 +1,13 @@
 /**
- * AM Preset Finder Scraper (Final Edition)
- * Menggunakan library "impers" untuk bypass proteksi TLS Vercel
+ * AM Preset Finder Scraper (Proxy Edition)
+ * Menggunakan library "impers" dan Webshare Proxy
  */
 
 const { fetch } = require('impers'); 
 
 const BASE_URL = 'https://amfinder.web.id';
+// Alamat proxy dari Webshare (baris pertama)
+const PROXY_URL = 'http://bwjzartd:3bva829f5zgj@45.38.107.97:6014';
 
 const BROWSER_HEADERS = {
   'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
@@ -86,10 +88,11 @@ async function get_preset_links(link_tiktok) {
   const timeout = setTimeout(() => controller.abort(), 60_000);
 
   try {
-    // REQUEST MENGGUNAKAN IMPERS
+    // REQUEST MENGGUNAKAN IMPERS + PROXY
     const response = await fetch(apiUrl, {
       method: 'GET',
       impersonate: 'chrome124',
+      proxy: PROXY_URL, // <-- Memakai proxy
       headers: {
         ...BROWSER_HEADERS,
         'Accept': 'text/event-stream',
@@ -112,11 +115,12 @@ async function get_preset_links(link_tiktok) {
     let likes = result.video?.stats?.likes ?? null;
     let comments = result.video?.stats?.comments ?? null;
 
-    // Fallback ke tikwm.com jika API utama gagal
+    // Fallback ke tikwm.com
     if (!cover || views == null) {
       try {
         const fb = await fetch(`https://www.tikwm.com/api/?url=${encodeURIComponent(url)}`, {
           impersonate: 'chrome124',
+          proxy: PROXY_URL, // <-- Memakai proxy yang sama
           headers: BROWSER_HEADERS
         });
         const fbData = await fb.json();
