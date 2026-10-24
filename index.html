@@ -3,19 +3,19 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="referrer" content="no-referrer">
 <meta name="theme-color" content="#171329">
-<title>SYSTEM ERROR 500 — AnkraiXMotion</title>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<title>Under Maintenance — AnkraiXMotion</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
     :root {
         --bg-color: #171329;
         --card-bg: #1e1933;
         --text-main: #f8f8f8;
         --text-muted: #a09cb0;
-        --accent-error: #ff3366;
-        --accent-error-glow: rgba(255, 51, 102, 0.4);
-        --accent-yellow: #ffcc00;
+        --accent-warning: #facc15; /* Kuning Maintenance */
+        --accent-warning-glow: rgba(250, 204, 21, 0.3);
+        --accent-wa: #25D366;
         --border-color: #2d2545;
     }
 
@@ -30,6 +30,7 @@
         position: relative;
         display: flex;
         justify-content: center;
+        align-items: center;
     }
 
     /* Ambient Lights */
@@ -41,12 +42,12 @@
         filter: blur(100px);
         z-index: 0;
         pointer-events: none;
-        opacity: 0.4;
+        opacity: 0.3;
         animation: pulse 4s infinite alternate;
     }
     .ambient-one {
         top: -100px; left: -100px;
-        background: radial-gradient(circle, #ff3366 0%, transparent 70%);
+        background: radial-gradient(circle, #facc15 0%, transparent 70%);
     }
     .ambient-two {
         bottom: -100px; right: -100px;
@@ -60,7 +61,7 @@
 
     .page-shell {
         width: 100%;
-        max-width: 500px;
+        max-width: 450px;
         padding: 24px;
         position: relative;
         z-index: 1;
@@ -72,9 +73,9 @@
     /* Header */
     .site-header {
         display: flex;
-        justify-content: space-between;
+        justify-content: center;
         align-items: center;
-        margin-bottom: 20px;
+        margin-bottom: 10px;
     }
 
     .brand {
@@ -88,8 +89,8 @@
     }
 
     .brand-mark {
-        background: var(--accent-error);
-        color: white;
+        background: var(--accent-warning);
+        color: #171329;
         width: 36px;
         height: 36px;
         display: flex;
@@ -97,202 +98,131 @@
         justify-content: center;
         border-radius: 10px;
         font-weight: 800;
-        box-shadow: 0 0 15px var(--accent-error-glow);
+        box-shadow: 0 0 15px var(--accent-warning-glow);
     }
 
-    .brand-name span { color: var(--accent-error); }
+    .brand-name span { color: var(--accent-warning); }
 
-    .header-pill {
-        background: rgba(255, 51, 102, 0.1);
-        border: 1px solid var(--accent-error);
-        color: var(--accent-error);
-        padding: 6px 12px;
-        border-radius: 20px;
-        font-size: 0.75rem;
-        font-weight: 700;
-        letter-spacing: 1px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .pulse-dot {
-        width: 8px;
-        height: 8px;
-        background: var(--accent-error);
-        border-radius: 50%;
-        animation: blink 1s infinite alternate;
-    }
-
-    @keyframes blink { 0% { opacity: 1; } 100% { opacity: 0; } }
-
-    /* Hero / Glitch */
-    .hero { text-align: center; margin-bottom: 20px; }
-    
-    .eyebrow {
-        color: var(--accent-error);
-        font-size: 0.8rem;
-        font-weight: 700;
-        letter-spacing: 2px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 10px;
-        margin-bottom: 12px;
-    }
-
-    .eyebrow-line { width: 30px; height: 2px; background: var(--accent-error); }
-
-    .glitch-text {
-        font-size: 2.5rem;
-        font-weight: 700;
-        line-height: 1.1;
-        margin-bottom: 16px;
-        position: relative;
-        color: white;
-        text-shadow: 2px 2px 0 var(--accent-error), -2px -2px 0 #00d2ff;
-        animation: glitch-shake 0.3s infinite;
-    }
-
-    @keyframes glitch-shake {
-        0% { transform: translate(0); }
-        20% { transform: translate(-2px, 2px); }
-        40% { transform: translate(-2px, -2px); }
-        60% { transform: translate(2px, 2px); }
-        80% { transform: translate(2px, -2px); }
-        100% { transform: translate(0); }
-    }
-
-    .hero-copy { color: var(--text-muted); font-size: 1rem; line-height: 1.5; }
-
-    /* Error Card */
-    .error-card {
+    /* Maintenance Card */
+    .maintenance-card {
         background: var(--card-bg);
-        border: 1px solid var(--accent-error);
-        border-radius: 20px;
-        padding: 24px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 0 20px rgba(255,51,102,0.1);
+        border: 1px solid var(--border-color);
+        border-radius: 24px;
+        padding: 32px 24px;
+        text-align: center;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.6), inset 0 0 20px rgba(250, 204, 21, 0.05);
         position: relative;
         overflow: hidden;
     }
 
-    .error-card::before {
+    /* Efek Pita Garis-garis Peringatan */
+    .maintenance-card::before {
         content: '';
         position: absolute;
-        top: 0; left: 0; width: 100%; height: 4px;
-        background: repeating-linear-gradient(90deg, var(--accent-error), var(--accent-error) 10px, transparent 10px, transparent 20px);
+        top: 0; left: 0; width: 100%; height: 6px;
+        background: repeating-linear-gradient(-45deg, #facc15, #facc15 10px, #171329 10px, #171329 20px);
     }
 
-    .error-header {
+    .icon-container {
+        width: 100px;
+        height: 100px;
+        background: rgba(250, 204, 21, 0.1);
+        border: 2px dashed var(--accent-warning);
+        border-radius: 50%;
         display: flex;
         align-items: center;
-        gap: 12px;
-        margin-bottom: 20px;
+        justify-content: center;
+        margin: 0 auto 24px;
+        font-size: 3rem;
+        color: var(--accent-warning);
+        animation: float 3s ease-in-out infinite;
     }
 
-    .error-icon {
-        font-size: 2rem;
-        animation: spin 3s linear infinite;
+    @keyframes float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
     }
 
+    .gear-spin {
+        animation: spin 4s linear infinite;
+    }
+    
     @keyframes spin { 100% { transform: rotate(360deg); } }
 
-    .error-title { color: var(--accent-error); font-weight: 700; font-size: 1.2rem; }
-    
-    /* Terminal Log */
-    .terminal-box {
-        background: #0a0812;
-        border-radius: 12px;
-        padding: 16px;
-        font-family: 'Space Mono', monospace;
-        font-size: 0.8rem;
-        color: #00ff66;
-        margin-bottom: 24px;
-        border: 1px solid #2a1f3d;
+    .title {
+        font-size: 1.8rem;
+        font-weight: 700;
+        margin-bottom: 12px;
+        color: white;
+        line-height: 1.2;
     }
-    
-    .log-line { margin-bottom: 6px; }
-    .log-error { color: var(--accent-error); font-weight: bold; }
-    .log-warn { color: var(--accent-yellow); }
 
-    /* Disabled Form */
-    label { display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px; font-weight: 600; }
-    
-    .input-wrap {
-        background: rgba(255,255,255,0.05);
+    .title span {
+        color: var(--accent-warning);
+    }
+
+    .description {
+        color: var(--text-muted);
+        font-size: 0.95rem;
+        line-height: 1.6;
+        margin-bottom: 24px;
+    }
+
+    .description b {
+        color: #f8f8f8;
+    }
+
+    /* Status Box */
+    .status-box {
+        background: rgba(0,0,0,0.2);
         border: 1px solid var(--border-color);
         border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 24px;
         display: flex;
         align-items: center;
-        padding: 0 16px;
-        margin-bottom: 16px;
-        opacity: 0.6;
-    }
-
-    .input-wrap input {
-        background: transparent;
-        border: none;
-        color: var(--text-muted);
-        padding: 16px 12px;
-        width: 100%;
-        font-size: 0.95rem;
-        cursor: not-allowed;
-    }
-
-    .input-wrap input:focus { outline: none; }
-
-    .primary-btn {
-        width: 100%;
-        padding: 16px;
-        border-radius: 12px;
-        border: none;
-        background: #2d2545;
-        color: #6b6380;
-        font-weight: 700;
-        font-size: 1rem;
-        cursor: not-allowed;
-        display: flex;
         justify-content: center;
-        align-items: center;
-        gap: 8px;
+        gap: 10px;
+        font-size: 0.85rem;
+        color: var(--accent-warning);
+        font-weight: 600;
     }
 
-    /* Retry Button */
-    .retry-btn {
-        display: block;
-        width: 100%;
-        text-align: center;
+    .status-dot {
+        width: 10px;
+        height: 10px;
+        background: var(--accent-warning);
+        border-radius: 50%;
+        animation: blink 1s infinite alternate;
+    }
+
+    @keyframes blink { 0% { opacity: 1; } 100% { opacity: 0.2; } }
+
+    /* WA Button */
+    .wa-button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        background: var(--accent-wa);
+        color: #111;
         padding: 16px;
-        margin-top: 16px;
-        background: var(--accent-error);
-        color: white;
+        border-radius: 14px;
         text-decoration: none;
-        border-radius: 12px;
         font-weight: 700;
         font-size: 1rem;
-        transition: all 0.2s;
-        box-shadow: 0 4px 15px var(--accent-error-glow);
+        transition: all 0.3s ease;
+        box-shadow: 0 8px 20px rgba(37, 211, 102, 0.3);
     }
 
-    .retry-btn:hover {
-        background: #e62e5c;
+    .wa-button:hover {
+        background: #20b858;
         transform: translateY(-2px);
+        box-shadow: 0 12px 25px rgba(37, 211, 102, 0.4);
     }
 
-    .retry-btn:active {
-        transform: translateY(2px);
-    }
-
-    /* Shake Animation Class */
-    .shake {
-        animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
-    }
-
-    @keyframes shake {
-        10%, 90% { transform: translate3d(-1px, 0, 0); }
-        20%, 80% { transform: translate3d(2px, 0, 0); }
-        30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
-        40%, 60% { transform: translate3d(4px, 0, 0); }
+    .wa-button i {
+        font-size: 1.3rem;
     }
 
     /* Footer */
@@ -300,9 +230,7 @@
         text-align: center;
         color: var(--text-muted);
         font-size: 0.8rem;
-        margin-top: 20px;
-        display: flex;
-        justify-content: space-between;
+        margin-top: 10px;
     }
 </style>
 </head>
@@ -316,86 +244,40 @@
             <span class="brand-mark">AX</span>
             <span class="brand-name">Ankrai<span>X</span>Motion</span>
         </a>
-        <span class="header-pill"><span class="pulse-dot"></span> OFFLINE</span>
     </header>
 
-    <section class="hero">
-        <div class="eyebrow"><span class="eyebrow-line"></span> CRITICAL ERROR</div>
-        <h1 class="glitch-text">KONEKSI<br>TERPUTUS.</h1>
-        <p class="hero-copy">Sistem gagal menghubungi server AnkraiXMotion. Silakan periksa jaringan Anda atau hubungi administrator.</p>
-    </section>
-
-    <section class="error-card shake" id="errorCard">
-        <div class="error-header">
-            <span class="error-icon">⚠️</span>
-            <div>
-                <h2 class="error-title">Sistem Mengalami Gangguan</h2>
-                <span style="font-size: 0.8rem; color: var(--text-muted);">Error Code: 0x80070005</span>
-            </div>
+    <section class="maintenance-card">
+        <div class="icon-container">
+            <i class="fa-solid fa-gear gear-spin"></i>
         </div>
 
-        <div class="terminal-box">
-            <div class="log-line">> Mencoba terhubung ke API...</div>
-            <div class="log-line log-error">[FAILED] Connection timed out (Port 443)</div>
-            <div class="log-line log-warn">[WARN] Data cache tidak ditemukan.</div>
-            <div class="log-line log-error">[ERROR] Service Unavailable. Please try again later.</div>
-        </div>
-
-        <form id="searchForm">
-            <label for="tiktokUrl">Tautan video (Dinonaktifkan)</label>
-            <div class="input-wrap">
-                <span class="link-icon" aria-hidden="true">↗</span>
-                <input id="tiktokUrl" name="tiktokUrl" type="url" placeholder="Fitur pencarian dimatikan..." disabled>
-            </div>
-            <button class="primary-btn" type="button" disabled>
-                <span class="button-label">Gagal Memuat</span>
-                <span class="button-arrow" aria-hidden="true">✖</span>
-            </button>
-        </form>
+        <h1 class="title">Website Sedang<br><span>Diperbaiki.</span></h1>
         
-        <!-- Tombol Coba Lagi (Fake) -->
-        <a href="#" class="retry-btn" id="retryBtn">Coba Hubungkan Ulang</a>
+        <p class="description">
+            Mohon maaf, website saat ini sedang <i>error</i> dan admin lagi <b>mager banget</b> buat benerin sekarang. <br><br>
+            Silakan cek Saluran WhatsApp di bawah buat update terbaru.
+        </p>
+
+        <div class="status-box">
+            <div class="status-dot"></div>
+            STATUS: DALAM PERBAIKAN
+        </div>
+
+        <!-- TOMBOL SALURAN WHATSAPP -->
+        <a href="https://whatsapp.com/channel/0029VbC1J5S8kyyMKhJ1Na2w" target="_blank" rel="noopener noreferrer" class="wa-button">
+            <i class="fa-brands fa-whatsapp"></i>
+            Gabung Saluran WhatsApp
+        </a>
     </section>
 
     <footer class="site-footer">
-        <span>© <span id="year"></span> AnkraiXMotion</span>
-        <span>Server Node: Down</span>
+        &copy; <span id="year"></span> AnkraiXMotion. All Rights Reserved.
     </footer>
 </main>
 
 <script>
-    // Set Tahun Otomatis
+    // Set tahun otomatis
     document.getElementById('year').textContent = new Date().getFullYear();
-
-    // Logika Fake Error saat tombol Retry diklik
-    const retryBtn = document.getElementById('retryBtn');
-    const errorCard = document.getElementById('errorCard');
-
-    retryBtn.addEventListener('click', function(e) {
-        e.preventDefault();
-        
-        // Tambahkan efek getar (shake)
-        errorCard.classList.add('shake');
-        
-        // Ubah teks tombol sementara
-        const originalText = retryBtn.innerText;
-        retryBtn.innerText = "Menghubungkan...";
-        retryBtn.style.background = "#6b6380"; // Warna abu-abu
-        retryBtn.style.boxShadow = "none";
-        
-        // Setelah 1.5 detik, kembalikan ke status error
-        setTimeout(() => {
-            errorCard.classList.remove('shake');
-            retryBtn.innerText = "GAGAL TERHUBUNG (Coba Lagi)";
-            retryBtn.style.background = "var(--accent-error)";
-            retryBtn.style.boxShadow = "0 4px 15px var(--accent-error-glow)";
-            
-            // Getar sekali lagi
-            errorCard.classList.add('shake');
-            setTimeout(() => errorCard.classList.remove('shake'), 500);
-            
-        }, 1500);
-    });
 </script>
 </body>
 </html>
